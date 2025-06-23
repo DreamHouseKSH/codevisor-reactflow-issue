@@ -1,0 +1,133 @@
+body {
+  margin: 0;
+  font-family: Arial, sans-serif;
+  height: 100vh;
+}
+
+#root {
+  height: 100vh;
+}
+
+.container {
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.header {
+  background: #333;
+  color: white;
+  padding: 15px;
+  text-align: center;
+}
+
+.header h1 {
+  margin: 0;
+  font-size: 1.5rem;
+}
+
+.debug-panel {
+  background: #f8f9fa;
+  border-bottom: 1px solid #dee2e6;
+  padding: 10px;
+  font-family: 'Courier New', monospace;
+  font-size: 12px;
+  max-height: 200px;
+  overflow-y: auto;
+}
+
+.flow-container {
+  flex: 1;
+  background: #fafafa;
+}
+
+.custom-node {
+  background: white;
+  border: 2px solid #1e40af;
+  border-radius: 8px;
+  padding: 12px;
+  min-width: 120px;
+  text-align: center;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.custom-node:hover {
+  transform: scale(1.05);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+}
+
+.custom-node.component {
+  border-color: #10b981;
+  background: linear-gradient(135deg, #ecfdf5 0%, #d1fae5 100%);
+}
+
+.custom-node.module {
+  border-color: #f59e0b;
+  background: linear-gradient(135deg, #fffbeb 0%, #fef3c7 100%);
+}
+
+.custom-node.config {
+  border-color: #8b5cf6;
+  background: linear-gradient(135deg, #f3e8ff 0%, #e9d5ff 100%);
+}
+
+.node-label {
+  font-weight: bold;
+  margin-bottom: 5px;
+  color: #1f2937;
+}
+
+.node-type {
+  font-size: 10px;
+  color: #6b7280;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.controls-panel {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  background: white;
+  border-radius: 8px;
+  padding: 10px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+  z-index: 10;
+}
+
+.controls-panel button {
+  display: block;
+  width: 100%;
+  margin-bottom: 5px;
+  padding: 8px 12px;
+  border: 1px solid #d1d5db;
+  border-radius: 4px;
+  background: white;
+  cursor: pointer;
+  font-size: 12px;
+}
+
+.controls-panel button:hover {
+  background: #f9fafb;
+}
+
+.status-indicator {
+  display: inline-block;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  margin-right: 5px;
+}
+
+.status-ok {
+  background: #10b981;
+}
+
+.status-warning {
+  background: #f59e0b;
+}
+
+.status-error {
+  background: #ef4444;
+}

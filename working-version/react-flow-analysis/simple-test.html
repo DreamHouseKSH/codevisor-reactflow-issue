@@ -1,0 +1,334 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>React Flow 노드 위치 테스트</title>
+    <script src="https://unpkg.com/react@18/umd/react.development.js"></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+    <script src="https://unpkg.com/@xyflow/react@12/dist/umd/index.js"></script>
+    <link rel="stylesheet" href="https://unpkg.com/@xyflow/react@12/dist/style.css">
+    <style>
+        body {
+            margin: 0;
+            font-family: Arial, sans-serif;
+        }
+        .container {
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+        .header {
+            background: #333;
+            color: white;
+            padding: 10px;
+            text-align: center;
+        }
+        .debug-info {
+            background: #f0f0f0;
+            padding: 10px;
+            font-family: monospace;
+            font-size: 12px;
+        }
+        .flow-container {
+            flex: 1;
+            background: #fafafa;
+        }
+        .custom-node {
+            background: white;
+            border: 2px solid #1e40af;
+            border-radius: 8px;
+            padding: 10px;
+            min-width: 100px;
+            text-align: center;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .custom-node.component {
+            border-color: #10b981;
+            background: #ecfdf5;
+        }
+        .custom-node.module {
+            border-color: #f59e0b;
+            background: #fffbeb;
+        }
+        .custom-node.config {
+            border-color: #8b5cf6;
+            background: #f3e8ff;
+        }
+        .node-label {
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+        .node-type {
+            font-size: 10px;
+            color: #666;
+        }
+    </style>
+</head>
+<body>
+    <div id="root"></div>
+
+    <script type="text/babel">
+        const { useState, useEffect, useCallback } = React;
+        const { ReactFlow, Background, Controls, MiniMap, useNodesState, useEdgesState, ReactFlowProvider } = ReactFlowLib;
+
+        // 커스텀 노드 컴포넌트
+        const CustomNode = ({ data }) => {
+            return (
+                <div className={`custom-node ${data.nodeType}`}>
+                    <div className="node-label">{data.label}</div>
+                    <div className="node-type">{data.nodeType}</div>
+                </div>
+            );
+        };
+
+        const nodeTypes = {
+            custom: CustomNode
+        };
+
+        // 샘플 데이터 (위치값 명확하게 설정)
+        const initialNodes = [
+            {
+                id: 'MainPage.jsx',
+                type: 'custom',
+                position: { x: 300, y: 50 },
+                data: {
+                    label: 'MainPage',
+                    nodeType: 'component'
+                },
+                draggable: true
+            },
+            {
+                id: 'App.jsx',
+                type: 'custom',
+                position: { x: 100, y: 200 },
+                data: {
+                    label: 'App',
+                    nodeType: 'component'
+                },
+                draggable: true
+            },
+            {
+                id: 'GraphViewer.jsx',
+                type: 'custom',
+                position: { x: 300, y: 200 },
+                data: {
+                    label: 'GraphViewer',
+                    nodeType: 'component'
+                },
+                draggable: true
+            },
+            {
+                id: 'DetailPanel.jsx',
+                type: 'custom',
+                position: { x: 500, y: 200 },
+                data: {
+                    label: 'DetailPanel',
+                    nodeType: 'component'
+                },
+                draggable: true
+            },
+            {
+                id: 'GraphService.js',
+                type: 'custom',
+                position: { x: 200, y: 350 },
+                data: {
+                    label: 'GraphService',
+                    nodeType: 'module'
+                },
+                draggable: true
+            },
+            {
+                id: 'CustomNode.jsx',
+                type: 'custom',
+                position: { x: 400, y: 350 },
+                data: {
+                    label: 'CustomNode',
+                    nodeType: 'component'
+                },
+                draggable: true
+            },
+            {
+                id: 'utils.js',
+                type: 'custom',
+                position: { x: 150, y: 500 },
+                data: {
+                    label: 'utils',
+                    nodeType: 'module'
+                },
+                draggable: true
+            },
+            {
+                id: 'config.js',
+                type: 'custom',
+                position: { x: 350, y: 500 },
+                data: {
+                    label: 'config',
+                    nodeType: 'config'
+                },
+                draggable: true
+            }
+        ];
+
+        const initialEdges = [
+            { id: 'MainPage->App', source: 'MainPage.jsx', target: 'App.jsx', type: 'smoothstep' },
+            { id: 'MainPage->GraphViewer', source: 'MainPage.jsx', target: 'GraphViewer.jsx', type: 'smoothstep' },
+            { id: 'MainPage->DetailPanel', source: 'MainPage.jsx', target: 'DetailPanel.jsx', type: 'smoothstep' },
+            { id: 'GraphViewer->GraphService', source: 'GraphViewer.jsx', target: 'GraphService.js', type: 'smoothstep' },
+            { id: 'GraphViewer->CustomNode', source: 'GraphViewer.jsx', target: 'CustomNode.jsx', type: 'smoothstep' },
+            { id: 'App->utils', source: 'App.jsx', target: 'utils.js', type: 'smoothstep' },
+            { id: 'utils->config', source: 'utils.js', target: 'config.js', type: 'smoothstep' }
+        ];
+
+        const FlowComponent = () => {
+            const [nodes, setNodes, onNodesChange] = useNodesState(initialNodes);
+            const [edges, setEdges, onEdgesChange] = useEdgesState(initialEdges);
+            const [debugInfo, setDebugInfo] = useState('');
+
+            // 디버그 정보 업데이트
+            const updateDebugInfo = useCallback(() => {
+                const nodeElements = document.querySelectorAll('.react-flow__node');
+                let info = `노드 수: ${nodes.length}, DOM 노드 수: ${nodeElements.length}\n\n`;
+                
+                // React Flow 상태의 노드 위치
+                info += '=== React Flow State ===\n';
+                nodes.forEach(node => {
+                    info += `${node.id}: position(${node.position.x}, ${node.position.y})\n`;
+                });
+
+                // DOM 요소의 실제 위치
+                info += '\n=== DOM Transform ===\n';
+                nodeElements.forEach((element, index) => {
+                    const id = element.getAttribute('data-id');
+                    const style = getComputedStyle(element);
+                    const transform = style.transform;
+                    const rect = element.getBoundingClientRect();
+                    
+                    // transform에서 위치 추출
+                    let x = 0, y = 0;
+                    if (transform && transform !== 'none') {
+                        const translateMatch = transform.match(/translate\(([^,]+)px,\s*([^)]+)px\)/);
+                        const matrixMatch = transform.match(/matrix\(.*?,\s*.*?,\s*.*?,\s*.*?,\s*(-?\d+(?:\.\d+)?),\s*(-?\d+(?:\.\d+)?)\)/);
+                        
+                        if (translateMatch) {
+                            x = Math.round(parseFloat(translateMatch[1]));
+                            y = Math.round(parseFloat(translateMatch[2]));
+                        } else if (matrixMatch) {
+                            x = Math.round(parseFloat(matrixMatch[1]));
+                            y = Math.round(parseFloat(matrixMatch[2]));
+                        }
+                    }
+                    
+                    info += `${id || `node-${index}`}: transform(${x}, ${y}) rect(${Math.round(rect.x)}, ${Math.round(rect.y)})\n`;
+                });
+
+                // 위치 중복 확인
+                const positions = new Map();
+                nodeElements.forEach(element => {
+                    const transform = getComputedStyle(element).transform;
+                    let x = 0, y = 0;
+                    if (transform && transform !== 'none') {
+                        const translateMatch = transform.match(/translate\(([^,]+)px,\s*([^)]+)px\)/);
+                        const matrixMatch = transform.match(/matrix\(.*?,\s*.*?,\s*.*?,\s*.*?,\s*(-?\d+(?:\.\d+)?),\s*(-?\d+(?:\.\d+)?)\)/);
+                        
+                        if (translateMatch) {
+                            x = Math.round(parseFloat(translateMatch[1]));
+                            y = Math.round(parseFloat(translateMatch[2]));
+                        } else if (matrixMatch) {
+                            x = Math.round(parseFloat(matrixMatch[1]));
+                            y = Math.round(parseFloat(matrixMatch[2]));
+                        }
+                    }
+                    
+                    const key = `${x},${y}`;
+                    if (!positions.has(key)) {
+                        positions.set(key, []);
+                    }
+                    positions.get(key).push(element.getAttribute('data-id') || 'unknown');
+                });
+
+                info += `\n=== 위치 분석 ===\n`;
+                info += `고유 위치 수: ${positions.size}\n`;
+                positions.forEach((nodeIds, pos) => {
+                    if (nodeIds.length > 1) {
+                        info += `⚠️ 중복 위치 ${pos}: ${nodeIds.join(', ')}\n`;
+                    }
+                });
+
+                setDebugInfo(info);
+            }, [nodes]);
+
+            // 주기적으로 디버그 정보 업데이트
+            useEffect(() => {
+                const interval = setInterval(updateDebugInfo, 1000);
+                return () => clearInterval(interval);
+            }, [updateDebugInfo]);
+
+            // 초기 업데이트
+            useEffect(() => {
+                setTimeout(updateDebugInfo, 500);
+            }, [updateDebugInfo]);
+
+            const onNodeDragStop = useCallback((event, node) => {
+                console.log(`노드 ${node.id} 드래그 완료:`, node.position);
+                setTimeout(updateDebugInfo, 100);
+            }, [updateDebugInfo]);
+
+            return (
+                <div className="container">
+                    <div className="header">
+                        <h1>React Flow v12 노드 위치 분석</h1>
+                    </div>
+                    
+                    <div className="debug-info">
+                        <pre>{debugInfo}</pre>
+                    </div>
+
+                    <div className="flow-container">
+                        <ReactFlow
+                            nodes={nodes}
+                            edges={edges}
+                            onNodesChange={onNodesChange}
+                            onEdgesChange={onEdgesChange}
+                            onNodeDragStop={onNodeDragStop}
+                            nodeTypes={nodeTypes}
+                            fitView={false}
+                            defaultViewport={{ x: 0, y: 0, zoom: 0.8 }}
+                            minZoom={0.1}
+                            maxZoom={2}
+                        >
+                            <Background variant="dots" gap={20} size={1} />
+                            <Controls />
+                            <MiniMap 
+                                nodeColor={(node) => {
+                                    switch (node.data.nodeType) {
+                                        case 'component': return '#10b981';
+                                        case 'module': return '#f59e0b';
+                                        case 'config': return '#8b5cf6';
+                                        default: return '#6b7280';
+                                    }
+                                }}
+                                maskColor="rgba(255, 255, 255, 0.2)"
+                            />
+                        </ReactFlow>
+                    </div>
+                </div>
+            );
+        };
+
+        const App = () => {
+            return (
+                <ReactFlowProvider>
+                    <FlowComponent />
+                </ReactFlowProvider>
+            );
+        };
+
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<App />);
+    </script>
+
+    <!-- Babel standalone for JSX -->
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+</body>
+</html>

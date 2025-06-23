@@ -1,0 +1,20 @@
+{
+  "name": "react-flow-debug-analysis",
+  "version": "1.0.0",
+  "description": "React Flow 노드 위치 문제 분석용 샘플",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "serve": "python3 -m http.server 8080"
+  },
+  "dependencies": {
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
+    "@xyflow/react": "^12.7.1"
+  },
+  "devDependencies": {
+    "@vitejs/plugin-react": "^4.0.0",
+    "vite": "^4.4.0"
+  }
+}
